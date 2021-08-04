@@ -9,7 +9,6 @@ namespace SpotifyRPC
     static class Program
     {
         static event EventHandler<UpdateActivityEventArgs> UpdateStatus;
-        static event EventHandler IdleStatus;
         static event EventHandler ClearStatus;
 
         static bool running;
@@ -41,28 +40,6 @@ namespace SpotifyRPC
             }
         }
 
-        static void IdleActivity(this DiscordRpcClient discord)
-        {
-            try
-            {
-                discord.SetPresence(new RichPresence
-                {
-                    Details = "Idle",
-                    Assets = new Assets()
-                    {
-                        LargeImageKey = "spotify",
-                        LargeImageText = "github.com/IDoEverything/SpotifyRPC"
-                    }
-                });
-
-                Console.WriteLine("idle");
-            }
-            catch(Exception e)
-            {
-                Console.WriteLine(e.ToString());
-            }
-        }
-
         static void Main()
         {
             running = true;
@@ -84,7 +61,7 @@ namespace SpotifyRPC
                         }
                         if ((spotifyProcess.MainWindowTitle == "Spotify Premium" || spotifyProcess.MainWindowTitle == "Spotify") && notPlaying == false)
                         {
-                            IdleStatus?.Invoke(null, new EventArgs());
+                            ClearStatus?.Invoke(null, new EventArgs());
                             notPlaying = true;
                         }
                         else if (spotifyProcess.MainWindowTitle != prevtitle)
@@ -123,7 +100,6 @@ namespace SpotifyRPC
             bool clear = false;
 
             UpdateStatus += UpdateStatusHandler;
-            IdleStatus += IdleStatusHandler;
             ClearStatus += ClearStatusHandler;
 
             while (!clear)
@@ -137,12 +113,6 @@ namespace SpotifyRPC
                     discord.UpdateActivity(e.Song, e.Artist);
             }
 
-            void IdleStatusHandler(object sender, EventArgs e)
-            {
-                if (!clear)
-                    discord.IdleActivity();
-            }
-
             void ClearStatusHandler(object sender, EventArgs e)
             {
                 discord.ClearPresence();
@@ -150,7 +120,6 @@ namespace SpotifyRPC
                 running = false;
                 discord.Dispose();
                 UpdateStatus -= UpdateStatusHandler;
-                IdleStatus -= IdleStatusHandler;
                 ClearStatus -= ClearStatusHandler;
             }
         }
